@@ -5,7 +5,7 @@ pub trait StringUtils {
     fn substring(&self, start: usize, len: usize) -> Self;
 }
 
-pub impl StringUtils for String {
+impl StringUtils for String {
     fn substring(&self, start: usize, len: usize) -> Self {
         self.chars().skip(start).take(len).collect()
     }
@@ -22,7 +22,12 @@ pub fn remove_whitespace(s: &str) -> String {
 }
 
 pub fn get_site_data(url: &str) -> WebsiteData {
-    let ws_page = Webpage::from_url(url, WebpageOptions::default()).unwrap();
+    let ws_page = Webpage::from_url(url, WebpageOptions::default()).expect("Could not read from URL.");
+    let http = ws_page.http;
+    assert!(http.headers[0].starts_with("HTTP"));
+    assert_eq!(http.url, url);
+    assert_eq!(http.content_type, "text/html; charset=UTF-8".to_string());
+
     let html = ws_page.html;
     let mut concat: String = String::from("");
     for line in html.text_content.lines() {
@@ -46,7 +51,9 @@ pub fn print_site_data(data: &WebsiteData) {
     }
 }
 
+// future plan to add async for ease of use
 fn main() {
-    let data: WebsiteData = get_site_data(&"https://en.wikipedia.org/wiki/Web_scraping");
+    let data: WebsiteData = get_site_data("https://en.wikipedia.org/wiki/Web_scraping");
+
     print_site_data(&data);
 }
